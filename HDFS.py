@@ -1,11 +1,34 @@
 # -*- coding: UTF-8 -*-
 import os
 import uuid
+import math
+
+class Client(object):
+	"""docstring for Client"""
+	def __init__(self, namenode):
+		self.namenode = namenode
+
+	def write(self, filename, data):
+		chunks = [] #存放data分出来的num_chunks份数据
+		chunkloc = 1
+		num_chunks = self.get_num_chunks(data)
+		for i in range(0, len(data), self.namenode.chunksize):
+			chunks.append(data[i:i+self.namenode.chunksize])
+		chunk_uuids = self.namenode.alloc(filename, num_chunks) #为文件分配空间，完成元数据	
+		# print chunk_uuids
+		# print chunks
+		for i in range(0, len(chunk_uuids)):			
+			chunkloc = (chunkloc+1) % self.namenode.num_datanodes
+			self.namenode.datanodes[chunkloc].write(chunk_uuids[i], chunks[i]) 
+
+	def get_num_chunks(self, data):
+		return int(math.ceil(len(data)*1.0 / self.namenode.chunksize))
 
 class Namenode(object):
 	"""docstring for Namenode"""
 	def __init__(self):
 		self.num_datanodes = 3
+		self.chunksize = 10
 		self.filetable = {}
 		self.chunktable = {}
 		self.datanodes = {}
@@ -45,16 +68,21 @@ class Datanode(object):
 		return data
 
 def main():	
-	
-
-	
-	#test for Namenode
+	#2.test for Namenode
 	nd = Namenode()
-	print type(nd.datanodes[1])
-	print len(nd.alloc("jyc.txt", 15))
+	# print type(nd.datanodes[1])
+	# print len(nd.alloc("jyc.txt", 15))
+
+	#3.test for Client
+	c = Client(nd)
+	c.write("jyc", "Hello world.Hello world.Hello world.Hello world.")
 
 
-	# test for Datanode
+
+
+
+
+	# 1.test for Datanode
 	# i = 2
 	# t = Datanode(i)
 	# t.write(1234, "Hello world.")
