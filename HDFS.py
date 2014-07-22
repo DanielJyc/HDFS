@@ -33,8 +33,12 @@ class Client(object):
 			data = data + self.namenode.datanodes[chunkloc].read(chunk_uuid)
 		return data
 
-	# def delete(self, ):
-		
+	def delete(self, filename):  #删除文件：物理删除和元数据删除
+		chunk_uuids = self.namenode.filetable[filename]
+		for chunk_uuid in chunk_uuids :
+			chunkloc = self.namenode.chunktable[chunk_uuid]
+			self.namenode.datanodes[chunkloc].delete[chunk_uuid]  #物理删除
+		self.namenode.delete(filename) #逻辑删除：在元数据删除信息
 
 	def get_num_chunks(self, data):
 		return int(math.ceil(len(data)*1.0 / self.namenode.chunksize))
@@ -68,14 +72,14 @@ class Namenode(object):
 
 
 	def delete(self, filename):
-		print self.filetable
-		print self.chunktable		
+		# print self.filetable
+		# print self.chunktable		
 		chunk_uuids = self.filetable[filename]
 		for chunk_uuid in chunk_uuids:
 			self.chunktable.pop(chunk_uuid)
 		self.filetable.pop(filename)
-		print self.filetable
-		print self.chunktable
+		# print self.filetable
+		# print self.chunktable
 		
 class Datanode(object):
 	"""docstring for Datanode"""
@@ -118,16 +122,28 @@ def command_line():
 		else:
 			print "Wrong command. \n"
 
-	    
-
 def main():		
-	#2.test for Namenode
+	#3.test for Client
 	nd = Namenode()
-	print type(nd.datanodes[1])
-	print len(nd.alloc("jyc1.txt", 1))
-	print len(nd.alloc("jyc2.txt", 2))
-	print len(nd.alloc("jyc3.txt", 3))
-	nd.delete("jyc3.txt")
+	c = Client(nd)
+	c.write("jyc1", "Hello jyc1.Hello jyc1.Hello jyc1.Hello jyc1.")
+	c.write("jyc2", "Hello jyc2.Hello jyc2.Hello jyc2.Hello jyc2.")
+	c.write("jyc3", "Hello jyc3.Hello jyc3.Hello jyc3.Hello jyc3.")
+	print c.read("jyc1")
+	print c.read("jyc2")
+	print c.read("jyc3")
+	print nd.filetable
+	nd.delete("jyc2")
+	print nd.filetable
+
+
+	#2.test for Namenode
+	# nd = Namenode()
+	# print type(nd.datanodes[1])
+	# print len(nd.alloc("jyc1.txt", 1))
+	# print len(nd.alloc("jyc2.txt", 2))
+	# print len(nd.alloc("jyc3.txt", 3))
+	# nd.delete("jyc3.txt")
 
 	# 1.test for Datanode
 	# i = 2
@@ -140,10 +156,7 @@ def main():
 	# 4. command_line()
 
 
-	#3.test for Client
-	# c = Client(nd)
-	# c.write("jyc", "Hello jyc.Hello jyc.Hello jyc.Hello jyc.")
-	# print c.read("jyc")
+
 
 
 
