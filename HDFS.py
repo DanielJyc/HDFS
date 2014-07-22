@@ -9,11 +9,13 @@ class Namenode(object):
 		self.filetable = {}
 		self.chunktable = {}
 		self.datanodes = {}
+		self.init_datanodes() #初始化：loc<-->server
 
-	def init_datanodes():
-		for 
+	def init_datanodes(self):
+		for i in range(0, self.num_datanodes):
+			self.datanodes[i] = Datanode(i)
 
-	def alloc(self, filename, num_chunks):
+	def alloc(self, filename, num_chunks): #完成映射：filetable和chunktable
 		chunkloc = 1
 		chunk_uuids = []
 		for i in range(0, num_chunks):
@@ -43,8 +45,12 @@ class Datanode(object):
 		return data
 
 def main():	
+	
+
+	
 	#test for Namenode
 	nd = Namenode()
+	print type(nd.datanodes[1])
 	print len(nd.alloc("jyc.txt", 15))
 
 
