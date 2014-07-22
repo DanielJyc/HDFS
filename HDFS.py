@@ -2,6 +2,7 @@
 import os
 import uuid
 import math
+import time
 
 class Client(object):
 	"""docstring for Client"""
@@ -32,6 +33,9 @@ class Client(object):
 			data = data + self.namenode.datanodes[chunkloc].read(chunk_uuid)
 		return data
 
+	# def delete(self, ):
+		
+
 	def get_num_chunks(self, data):
 		return int(math.ceil(len(data)*1.0 / self.namenode.chunksize))
 
@@ -58,7 +62,20 @@ class Namenode(object):
 			self.chunktable[chunk_uuid] = chunkloc
 			chunkloc = chunkloc % self.num_datanodes + 1 #！！注意：要+1，否则chunkloc值不会变坏
 		self.filetable[filename] = chunk_uuids
+		print self.filetable
+		# print self.chunktable
 		return chunk_uuids
+
+
+	def delete(self, filename):
+		print self.filetable
+		print self.chunktable		
+		chunk_uuids = self.filetable[filename]
+		for chunk_uuid in chunk_uuids:
+			self.chunktable.pop(chunk_uuid)
+		self.filetable.pop(filename)
+		print self.filetable
+		print self.chunktable
 		
 class Datanode(object):
 	"""docstring for Datanode"""
@@ -78,17 +95,23 @@ class Datanode(object):
 			data = fr.read()
 		return data
 
+	def delete(self, chunk_uuid):
+		try:
+			os.remove(self.local_fs_root + "/" + str(chunk_uuid))
+		except WindowsError:
+			print "Filename:" + self.local_fs_root + "/" + str(chunk_uuid) + 'dose not exits.'
+
 def command_line():
 	nd = Namenode()
 	c = Client(nd)
 	while True:
 		cmd = raw_input('Input your command:\n')	
 		if('write' == cmd):
-			filename = raw_input('input your  filename:\n')
+			filename = raw_input('Input your  filename:\n')
 			data = raw_input('Input your data:\n')
 			c.write(filename, data)
 		elif('read' == cmd):
-			filename = raw_input('input your  filename:\n')
+			filename = raw_input('Input your  filename:\n')
 			print c.read(filename)
 		elif('exit' == cmd):
 			break
@@ -97,13 +120,25 @@ def command_line():
 
 	    
 
-def main():	
-	command_line()
+def main():		
 	#2.test for Namenode
-	# nd = Namenode()
+	nd = Namenode()
+	print type(nd.datanodes[1])
+	print len(nd.alloc("jyc1.txt", 1))
+	print len(nd.alloc("jyc2.txt", 2))
+	print len(nd.alloc("jyc3.txt", 3))
+	nd.delete("jyc3.txt")
 
-	# print type(nd.datanodes[1])
-	# print len(nd.alloc("jyc.txt", 15))
+	# 1.test for Datanode
+	# i = 2
+	# t = Datanode(i)
+	# t.write(1234, "Hello world.")
+	# print t.read(1234)
+	# time.sleep(2)	#延迟两秒
+	# t.delete(1234)
+
+	# 4. command_line()
+
 
 	#3.test for Client
 	# c = Client(nd)
@@ -113,11 +148,7 @@ def main():
 
 
 
-	# 1.test for Datanode
-	# i = 2
-	# t = Datanode(i)
-	# t.write(1234, "Hello world.")
-	# print t.read(1234)
+
 
 
 
