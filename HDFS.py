@@ -18,8 +18,19 @@ class Client(object):
 		# print chunk_uuids
 		# print chunks
 		for i in range(0, len(chunk_uuids)):			
-			chunkloc = (chunkloc+1) % self.namenode.num_datanodes
+			chunkloc = i % self.namenode.num_datanodes + 1
 			self.namenode.datanodes[chunkloc].write(chunk_uuids[i], chunks[i]) 
+
+	def read(self, filename):
+		data = ''
+		chunk_uuids = self.namenode.filetable[filename]
+		# print chunk_uuids
+		for chunk_uuid in chunk_uuids:
+			chunkloc = self.namenode.chunktable[chunk_uuid] #获取uuid的DataNode的位置
+			# print chunk_uuid
+			# print chunkloc			
+			data = data + self.namenode.datanodes[chunkloc].read(chunk_uuid)
+		return data
 
 	def get_num_chunks(self, data):
 		return int(math.ceil(len(data)*1.0 / self.namenode.chunksize))
@@ -35,7 +46,7 @@ class Namenode(object):
 		self.init_datanodes() #初始化：loc<-->server
 
 	def init_datanodes(self):
-		for i in range(0, self.num_datanodes):
+		for i in range(1, self.num_datanodes+1):
 			self.datanodes[i] = Datanode(i)
 
 	def alloc(self, filename, num_chunks): #完成映射：filetable和chunktable
@@ -45,7 +56,7 @@ class Namenode(object):
 			chunk_uuid = uuid.uuid1();
 			chunk_uuids.append(chunk_uuid)
 			self.chunktable[chunk_uuid] = chunkloc
-			chunkloc = chunkloc % self.num_datanodes
+			chunkloc = chunkloc % self.num_datanodes + 1 #！！注意：要+1，否则chunkloc值不会变坏
 		self.filetable[filename] = chunk_uuids
 		return chunk_uuids
 		
@@ -75,9 +86,11 @@ def main():
 
 	#3.test for Client
 	c = Client(nd)
-	c.write("jyc", "Hello world.Hello world.Hello world.Hello world.")
+	c.write("world", "Hello world.Hello world.Hello world.Hello world.")
+	print c.read("world")
 
-
+	c.write("jyc", "Hello jyc.Hello jyc.Hello jyc.Hello jyc.")
+	print c.read("jyc")
 
 
 
