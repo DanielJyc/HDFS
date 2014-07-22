@@ -78,19 +78,37 @@ class Datanode(object):
 			data = fr.read()
 		return data
 
-def main():	
-	#2.test for Namenode
+def command_line():
 	nd = Namenode()
+	c = Client(nd)
+	while True:
+		cmd = raw_input('Input your command:\n')	
+		if('write' == cmd):
+			filename = raw_input('input your  filename:\n')
+			data = raw_input('Input your data:\n')
+			c.write(filename, data)
+		elif('read' == cmd):
+			filename = raw_input('input your  filename:\n')
+			print c.read(filename)
+		elif('exit' == cmd):
+			break
+		else:
+			print "Wrong command. \n"
+
+	    
+
+def main():	
+	command_line()
+	#2.test for Namenode
+	# nd = Namenode()
+
 	# print type(nd.datanodes[1])
 	# print len(nd.alloc("jyc.txt", 15))
 
 	#3.test for Client
-	c = Client(nd)
-	c.write("world", "Hello world.Hello world.Hello world.Hello world.")
-	print c.read("world")
-
-	c.write("jyc", "Hello jyc.Hello jyc.Hello jyc.Hello jyc.")
-	print c.read("jyc")
+	# c = Client(nd)
+	# c.write("jyc", "Hello jyc.Hello jyc.Hello jyc.Hello jyc.")
+	# print c.read("jyc")
 
 
 
