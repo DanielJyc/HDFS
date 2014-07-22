@@ -37,8 +37,13 @@ class Client(object):
 		chunk_uuids = self.namenode.filetable[filename]
 		for chunk_uuid in chunk_uuids :
 			chunkloc = self.namenode.chunktable[chunk_uuid]
-			self.namenode.datanodes[chunkloc].delete[chunk_uuid]  #物理删除
+			self.namenode.datanodes[chunkloc].delete(chunk_uuid)  #物理删除
 		self.namenode.delete(filename) #逻辑删除：在元数据删除信息
+
+	def list_files(self):
+		print "Files:"
+		for (k, v) in self.namenode.filetable.items():
+			print k
 
 	def get_num_chunks(self, data):
 		return int(math.ceil(len(data)*1.0 / self.namenode.chunksize))
@@ -69,7 +74,6 @@ class Namenode(object):
 		print self.filetable
 		# print self.chunktable
 		return chunk_uuids
-
 
 	def delete(self, filename):
 		# print self.filetable
@@ -133,8 +137,10 @@ def main():
 	print c.read("jyc2")
 	print c.read("jyc3")
 	print nd.filetable
-	nd.delete("jyc2")
+	c.list_files()
+	c.delete("jyc2")
 	print nd.filetable
+	c.list_files()
 
 
 	#2.test for Namenode
