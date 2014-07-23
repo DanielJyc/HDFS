@@ -26,26 +26,32 @@ class Client(object):
 			self.namenode.datanodes[chunkloc].write(chunk_uuids[i], chunks[i]) 
 
 	def read(self, filename):
-		data = ''
-		chunk_uuids = self.namenode.filetable[filename]
-		# print chunk_uuids
-		for chunk_uuid in chunk_uuids:
-			chunkloc = self.namenode.chunktable[chunk_uuid] #获取uuid的DataNode的位置
-			# print chunk_uuid
-			# print chunkloc
-			data_temp = self.namenode.datanodes[chunkloc].read(chunk_uuid)	
-			if -1 == data_temp: #读取当前DataNode上的chunk不存在（即：某一个DataNode被损坏）
-				data_temp = self.namenode.datanodes[chunkloc%self.namenode.num_datanodes + 1].read(chunk_uuid)
-				print 'Current chunk is broken.'  #读取下一个DataNode的chunk
-			data = data + data_temp
-		return data
+		if True == self.namenode.exits(filename) :
+			data = ''
+			chunk_uuids = self.namenode.filetable[filename]
+			# print chunk_uuids
+			for chunk_uuid in chunk_uuids:
+				chunkloc = self.namenode.chunktable[chunk_uuid] #获取uuid的DataNode的位置
+				# print chunk_uuid
+				# print chunkloc
+				data_temp = self.namenode.datanodes[chunkloc].read(chunk_uuid)	
+				if -1 == data_temp: #读取当前DataNode上的chunk不存在（即：某一个DataNode被损坏）
+					data_temp = self.namenode.datanodes[chunkloc%self.namenode.num_datanodes + 1].read(chunk_uuid)
+					print 'Current chunk is broken.'  #读取下一个DataNode的chunk
+				data = data + data_temp
+			return data
+		else :
+			print "The file: \"" + filename + "\" is not exits."		
 
 	def delete(self, filename):  #删除文件：物理删除和元数据删除
-		chunk_uuids = self.namenode.filetable[filename]
-		for chunk_uuid in chunk_uuids :
-			chunkloc = self.namenode.chunktable[chunk_uuid]
-			self.namenode.datanodes[chunkloc].delete(chunk_uuid)  #物理删除
-		self.namenode.delete(filename) #逻辑删除：在元数据删除信息
+		if True == self.namenode.exits(filename) :
+			chunk_uuids = self.namenode.filetable[filename]
+			for chunk_uuid in chunk_uuids :
+				chunkloc = self.namenode.chunktable[chunk_uuid]
+				self.namenode.datanodes[chunkloc].delete(chunk_uuid)  #物理删除
+			self.namenode.delete(filename) #逻辑删除：在元数据删除信息
+		else :
+			print "The file: \"" + filename + "\" is not exits."
 
 	def list_files(self):
 		print "Files:"
@@ -91,6 +97,12 @@ class Namenode(object):
 		self.filetable.pop(filename)
 		# print self.filetable
 		# print self.chunktable
+
+	def exits(self, filename): #检测文件是否存在
+		if filename in self.filetable:
+			return True
+		else: 
+			return False
 		
 class Datanode(object):
 	"""docstring for Datanode"""
@@ -144,15 +156,17 @@ def command_line():
 def main():		
 	# 4. command_line()
 	command_line()
-		
+
 	#3.test for Client
 	# nd = Namenode()
 	# c = Client(nd)
+	# c.delete("jyc1")
+	# c.read("jyc1")
 	# c.write("jyc1", "Hello jyc1.Hello jyc1.Hello jyc1.Hello jyc1.")
-	# time.sleep(5)
+	# # time.sleep(5)
 	# c.write("jyc2", "Hello jyc2.Hello jyc2.Hello jyc2.Hello jyc2.")
 	# c.write("jyc3", "Hello jyc3.Hello jyc3.Hello jyc3.Hello jyc3.")
-	# time.sleep(5)
+	# # time.sleep(5)
 	# print c.read("jyc1")
 	# print c.read("jyc2")
 	# print c.read("jyc3")
