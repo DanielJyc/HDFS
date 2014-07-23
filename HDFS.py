@@ -48,7 +48,8 @@ class Client(object):
 			chunk_uuids = self.namenode.filetable[filename]
 			for chunk_uuid in chunk_uuids :
 				chunkloc = self.namenode.chunktable[chunk_uuid]
-				self.namenode.datanodes[chunkloc].delete(chunk_uuid)  #物理删除
+				self.namenode.datanodes[chunkloc].delete(chunk_uuid)  #物理删除:第一份
+				self.namenode.datanodes[chunkloc%self.namenode.num_datanodes + 1].delete(chunk_uuid)  #物理删除：第二份
 			self.namenode.delete(filename) #逻辑删除：在元数据删除信息
 		else :
 			print "The file: \"" + filename + "\" is not exits."
@@ -113,9 +114,11 @@ class Datanode(object):
 			os.makedirs(self.local_fs_root)
 
 	def write(self, chunk_uuid, chunk):#写入到chunk
-		with open(self.local_fs_root + "/" + str(chunk_uuid), "w") as fw:
-			fw.write(chunk)
-	
+		try:
+			with open(self.local_fs_root + "/" + str(chunk_uuid), "w") as fw:
+				fw.write(chunk)
+		except IOError :
+			print "The HDFS is broken."
 	def read(self, chunk_uuid): #从chunk读取
 		data = None
 		try :
@@ -133,25 +136,39 @@ class Datanode(object):
 
 def command_line():
 	nd = Namenode()
-	c = Client(nd)
+	client = Client(nd)
 	while True:
 		cmd = raw_input('Input your command:\n')	
-		if('write' == cmd):
-			filename = raw_input('Input the filename which you want to write:\n')
-			data = raw_input('Input your data:\n')
-			c.write(filename, data)
-		elif('read' == cmd):
-			filename = raw_input('Input the filename which you want to read:\n')
-			print c.read(filename)
+		if('upload' == cmd):
+			upload_cmd(client)
+		elif('download' == cmd):
+			download_cmd(client)
 		elif('delete' == cmd):
-			filename = raw_input('Input the filename which you want to delete:\n')
-			c.delete(filename)
+			filename = raw_input('Input the filename which you want to delete in HDFS:\n')
+			client.delete(filename)
 		elif('ls' == cmd):
-			c.list_files()
-		elif('exit' == cmd):
+			client.list_files()
+		elif('exits' == cmd):
 			break
 		else:
 			print "Wrong command. \n"
+
+def upload_cmd(client):
+	filename = raw_input('Input the filename which you want to upload in local:\n')
+	# data = raw_input('Input your data:\n')
+	try :
+		with open(filename, "r") as fr: #读取本地文件
+			data = fr.read()
+			client.write(filename, data)	  #写入HDFS
+	except IOError :
+		print "No such file in local."
+
+def download_cmd(client):
+	filename = raw_input('Input the filename which you want to download in HDFS:\n')
+	data = client.read(filename)  #读取HDFS文件
+	print data 
+	with open(filename, "w") as fw:  
+		fw.write(data)	  #写入本地
 
 def main():		
 	# 4. command_line()
