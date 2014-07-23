@@ -15,7 +15,7 @@ class Client(object):
 		num_chunks = self.get_num_chunks(data)
 		for i in range(0, len(data), self.namenode.chunksize):
 			chunks.append(data[i:i+self.namenode.chunksize])
-		chunk_uuids = self.namenode.alloc(filename, num_chunks) #为文件分配空间，完成元数据	
+		chunk_uuids = self.namenode.alloc(filename, num_chunks) #为文件分配空间，更新元数据	
 		for i in range(0, len(chunk_uuids)):			
 			chunkloc = i % self.namenode.num_datanodes + 1
 			self.namenode.datanodes[chunkloc].write(chunk_uuids[i], chunks[i]) 	
