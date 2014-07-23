@@ -10,18 +10,18 @@ class Client(object):
 		self.namenode = namenode
 
 	def write(self, filename, data):
-		chunks = [] #å­˜æ”¾dataåˆ†å‡ºæ¥çš„num_chunksä»½æ•°æ®
+		chunks = [] #´æ·Ådata·Ö³öÀ´µÄnum_chunks·İÊı¾İ
 		chunkloc = 1
 		num_chunks = self.get_num_chunks(data)
 		for i in range(0, len(data), self.namenode.chunksize):
 			chunks.append(data[i:i+self.namenode.chunksize])
-		chunk_uuids = self.namenode.alloc(filename, num_chunks) #ä¸ºæ–‡ä»¶åˆ†é…ç©ºé—´ï¼Œå®Œæˆå…ƒæ•°æ®	
+		chunk_uuids = self.namenode.alloc(filename, num_chunks) #ÎªÎÄ¼ş·ÖÅä¿Õ¼ä£¬Íê³ÉÔªÊı¾İ	
 		# print chunk_uuids
 		# print chunks
 		for i in range(0, len(chunk_uuids)):			
 			chunkloc = i % self.namenode.num_datanodes + 1
 			self.namenode.datanodes[chunkloc].write(chunk_uuids[i], chunks[i]) 	
-			#å¤‡ä»½ç¬¬äºŒä»½		
+			#±¸·İµÚ¶ş·İ		
 			chunkloc = chunkloc % self.namenode.num_datanodes + 1
 			self.namenode.datanodes[chunkloc].write(chunk_uuids[i], chunks[i]) 
 
@@ -31,26 +31,26 @@ class Client(object):
 			chunk_uuids = self.namenode.filetable[filename]
 			# print chunk_uuids
 			for chunk_uuid in chunk_uuids:
-				chunkloc = self.namenode.chunktable[chunk_uuid] #è·å–uuidçš„DataNodeçš„ä½ç½®
+				chunkloc = self.namenode.chunktable[chunk_uuid] #»ñÈ¡uuidµÄDataNodeµÄÎ»ÖÃ
 				# print chunk_uuid
 				# print chunkloc
 				data_temp = self.namenode.datanodes[chunkloc].read(chunk_uuid)	
-				if -1 == data_temp: #è¯»å–å½“å‰DataNodeä¸Šçš„chunkä¸å­˜åœ¨ï¼ˆå³ï¼šæŸä¸€ä¸ªDataNodeè¢«æŸåï¼‰
+				if -1 == data_temp: #¶ÁÈ¡µ±Ç°DataNodeÉÏµÄchunk²»´æÔÚ£¨¼´£ºÄ³Ò»¸öDataNode±»Ëğ»µ£©
 					data_temp = self.namenode.datanodes[chunkloc%self.namenode.num_datanodes + 1].read(chunk_uuid)
-					print 'Current chunk is broken.'  #è¯»å–ä¸‹ä¸€ä¸ªDataNodeçš„chunk
+					print 'Current chunk is broken.'  #¶ÁÈ¡ÏÂÒ»¸öDataNodeµÄchunk
 				data = data + data_temp
 			return data
 		else :
 			print "The file: \"" + filename + "\" is not exits."		
 
-	def delete(self, filename):  #åˆ é™¤æ–‡ä»¶ï¼šç‰©ç†åˆ é™¤å’Œå…ƒæ•°æ®åˆ é™¤
+	def delete(self, filename):  #É¾³ıÎÄ¼ş£ºÎïÀíÉ¾³ıºÍÔªÊı¾İÉ¾³ı
 		if True == self.namenode.exits(filename) :
 			chunk_uuids = self.namenode.filetable[filename]
 			for chunk_uuid in chunk_uuids :
 				chunkloc = self.namenode.chunktable[chunk_uuid]
-				self.namenode.datanodes[chunkloc].delete(chunk_uuid)  #ç‰©ç†åˆ é™¤:ç¬¬ä¸€ä»½
-				self.namenode.datanodes[chunkloc%self.namenode.num_datanodes + 1].delete(chunk_uuid)  #ç‰©ç†åˆ é™¤ï¼šç¬¬äºŒä»½
-			self.namenode.delete(filename) #é€»è¾‘åˆ é™¤ï¼šåœ¨å…ƒæ•°æ®åˆ é™¤ä¿¡æ¯
+				self.namenode.datanodes[chunkloc].delete(chunk_uuid)  #ÎïÀíÉ¾³ı:µÚÒ»·İ
+				self.namenode.datanodes[chunkloc%self.namenode.num_datanodes + 1].delete(chunk_uuid)  #ÎïÀíÉ¾³ı£ºµÚ¶ş·İ
+			self.namenode.delete(filename) #Âß¼­É¾³ı£ºÔÚÔªÊı¾İÉ¾³ıĞÅÏ¢
 		else :
 			print "The file: \"" + filename + "\" is not exits."
 
@@ -70,20 +70,20 @@ class Namenode(object):
 		self.filetable = {}
 		self.chunktable = {}
 		self.datanodes = {}
-		self.init_datanodes() #åˆå§‹åŒ–ï¼šloc<-->server
+		self.init_datanodes() #³õÊ¼»¯£ºloc<-->server
 
 	def init_datanodes(self):
 		for i in range(1, self.num_datanodes+1):
 			self.datanodes[i] = Datanode(i)
 
-	def alloc(self, filename, num_chunks): #å®Œæˆæ˜ å°„ï¼šfiletableå’Œchunktable
+	def alloc(self, filename, num_chunks): #Íê³ÉÓ³Éä£ºfiletableºÍchunktable
 		chunkloc = 1
 		chunk_uuids = []
 		for i in range(0, num_chunks):
 			chunk_uuid = uuid.uuid1();
 			chunk_uuids.append(chunk_uuid)
 			self.chunktable[chunk_uuid] = chunkloc
-			chunkloc = chunkloc % self.num_datanodes + 1 #ï¼ï¼æ³¨æ„ï¼šè¦+1ï¼Œå¦åˆ™chunklocå€¼ä¸ä¼šå˜å
+			chunkloc = chunkloc % self.num_datanodes + 1 #£¡£¡×¢Òâ£ºÒª+1£¬·ñÔòchunklocÖµ²»»á±ä»µ
 		self.filetable[filename] = chunk_uuids
 		print self.filetable
 		# print self.chunktable
@@ -99,7 +99,7 @@ class Namenode(object):
 		# print self.filetable
 		# print self.chunktable
 
-	def exits(self, filename): #æ£€æµ‹æ–‡ä»¶æ˜¯å¦å­˜åœ¨
+	def exits(self, filename): #¼ì²âÎÄ¼şÊÇ·ñ´æÔÚ
 		if filename in self.filetable:
 			return True
 		else: 
@@ -109,17 +109,17 @@ class Datanode(object):
 	"""docstring for Datanode"""
 	def __init__(self, chunkloc):
 		self.chunkloc = chunkloc
-		self.local_fs_root = "D:/HDFSTemp/Datanode" + str(chunkloc) #ç”¨ä¸åŒçš„ç›®å½•æ¥æ¨¡ä»¿ä¸åŒçš„Datanode
+		self.local_fs_root = "D:/HDFSTemp/Datanode" + str(chunkloc) #ÓÃ²»Í¬µÄÄ¿Â¼À´Ä£·Â²»Í¬µÄDatanode
 		if not os.path.isdir(self.local_fs_root):
 			os.makedirs(self.local_fs_root)
 
-	def write(self, chunk_uuid, chunk):#å†™å…¥åˆ°chunk
+	def write(self, chunk_uuid, chunk):#Ğ´Èëµ½chunk
 		try:
 			with open(self.local_fs_root + "/" + str(chunk_uuid), "w") as fw:
 				fw.write(chunk)
 		except IOError :
 			print "The HDFS is broken."
-	def read(self, chunk_uuid): #ä»chunkè¯»å–
+	def read(self, chunk_uuid): #´Óchunk¶ÁÈ¡
 		data = None
 		try :
 			with open(self.local_fs_root + "/" + str(chunk_uuid), "r") as fr:
@@ -134,45 +134,52 @@ class Datanode(object):
 		except WindowsError:
 			print "Filename:" + self.local_fs_root + "/" + str(chunk_uuid) + 'dose not exits.'
 
-def command_line():
-	nd = Namenode()
-	client = Client(nd)
-	while True:
-		cmd = raw_input('Input your command:\n')	
-		if('upload' == cmd):
-			upload_cmd(client)
-		elif('download' == cmd):
-			download_cmd(client)
-		elif('delete' == cmd):
-			filename = raw_input('Input the filename which you want to delete in HDFS:\n')
-			client.delete(filename)
-		elif('ls' == cmd):
-			client.list_files()
-		elif('exits' == cmd):
-			break
-		else:
-			print "Wrong command. \n"
+class Command(object):
+	"""docstring for Command"""
+	def __init__(self, client):
+		self.client = client
+	
+	def command_line(self):
+		while True:
+			cmd = raw_input('Input your command:\n')	
+			if('upload' == cmd):
+				self.upload_cmd()
+			elif('download' == cmd):
+				self.download_cmd()
+			elif('delete' == cmd):
+				filename = raw_input('Input the filename which you want to delete in HDFS:\n')
+				self.client.delete(filename)
+			elif('ls' == cmd):
+				self.client.list_files()
+			elif('exits' == cmd):
+				break
+			else:
+				print "Wrong command. \n"
 
-def upload_cmd(client):
-	filename = raw_input('Input the filename which you want to upload in local:\n')
-	# data = raw_input('Input your data:\n')
-	try :
-		with open(filename, "r") as fr: #è¯»å–æœ¬åœ°æ–‡ä»¶
-			data = fr.read()
-			client.write(filename, data)	  #å†™å…¥HDFS
-	except IOError :
-		print "No such file in local."
+	def upload_cmd(self):
+		filename = raw_input('Input the filename which you want to upload in local:\n')
+		# data = raw_input('Input your data:\n')
+		try :
+			with open(filename, "r") as fr: #¶ÁÈ¡±¾µØÎÄ¼ş
+				data = fr.read()
+				self.client.write(filename, data)	  #Ğ´ÈëHDFS
+		except IOError :
+			print "No such file in local."
 
-def download_cmd(client):
-	filename = raw_input('Input the filename which you want to download in HDFS:\n')
-	data = client.read(filename)  #è¯»å–HDFSæ–‡ä»¶
-	print data 
-	with open(filename, "w") as fw:  
-		fw.write(data)	  #å†™å…¥æœ¬åœ°
+	def download_cmd(self):
+		filename = raw_input('Input the filename which you want to download in HDFS:\n')
+		data = self.client.read(filename)  #¶ÁÈ¡HDFSÎÄ¼ş
+		print data 
+		with open(filename, "w") as fw:  
+			fw.write(data)	  #Ğ´Èë±¾µØ
 
 def main():		
 	# 4. command_line()
-	command_line()
+	# command_line()
+	nd = Namenode()
+	client = Client(nd)	
+	command = Command(client)
+	command.command_line()
 
 	#3.test for Client
 	# nd = Namenode()
@@ -206,7 +213,7 @@ def main():
 	# t = Datanode(i)
 	# t.write(1234, "Hello world.")
 	# print t.read(1234)
-	# time.sleep(2)	#å»¶è¿Ÿä¸¤ç§’
+	# time.sleep(2)	#ÑÓ³ÙÁ½Ãë
 	# t.delete(1234)
 
 
