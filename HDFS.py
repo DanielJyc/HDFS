@@ -125,35 +125,42 @@ def command_line():
 	while True:
 		cmd = raw_input('Input your command:\n')	
 		if('write' == cmd):
-			filename = raw_input('Input your  filename:\n')
+			filename = raw_input('Input the filename which you want to write:\n')
 			data = raw_input('Input your data:\n')
 			c.write(filename, data)
 		elif('read' == cmd):
-			filename = raw_input('Input your  filename:\n')
+			filename = raw_input('Input the filename which you want to read:\n')
 			print c.read(filename)
+		elif('delete' == cmd):
+			filename = raw_input('Input the filename which you want to delete:\n')
+			c.delete(filename)
+		elif('ls' == cmd):
+			c.list_files()
 		elif('exit' == cmd):
 			break
 		else:
 			print "Wrong command. \n"
 
 def main():		
+	# 4. command_line()
+	command_line()
+		
 	#3.test for Client
-	nd = Namenode()
-	c = Client(nd)
-	c.write("jyc1", "Hello jyc1.Hello jyc1.Hello jyc1.Hello jyc1.")
-	time.sleep(5)
-	c.write("jyc2", "Hello jyc2.Hello jyc2.Hello jyc2.Hello jyc2.")
-	c.write("jyc3", "Hello jyc3.Hello jyc3.Hello jyc3.Hello jyc3.")
-	time.sleep(5)
-	print c.read("jyc1")
-	print c.read("jyc2")
-	print c.read("jyc3")
-	print nd.filetable
-	c.list_files()
-	c.delete("jyc2")
-	print nd.filetable
-	c.list_files()
-
+	# nd = Namenode()
+	# c = Client(nd)
+	# c.write("jyc1", "Hello jyc1.Hello jyc1.Hello jyc1.Hello jyc1.")
+	# time.sleep(5)
+	# c.write("jyc2", "Hello jyc2.Hello jyc2.Hello jyc2.Hello jyc2.")
+	# c.write("jyc3", "Hello jyc3.Hello jyc3.Hello jyc3.Hello jyc3.")
+	# time.sleep(5)
+	# print c.read("jyc1")
+	# print c.read("jyc2")
+	# print c.read("jyc3")
+	# print nd.filetable
+	# c.list_files()
+	# c.delete("jyc2")
+	# print nd.filetable
+	# c.list_files()
 
 	#2.test for Namenode
 	# nd = Namenode()
@@ -171,7 +178,6 @@ def main():
 	# time.sleep(2)	#延迟两秒
 	# t.delete(1234)
 
-	# 4. command_line()
 
 
 
