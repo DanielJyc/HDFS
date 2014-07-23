@@ -20,9 +20,6 @@ class Client(object):
 		# print chunks
 		for i in range(0, len(chunk_uuids)):			
 			chunkloc = i % self.namenode.num_datanodes + 1
-			self.namenode.datanodes[chunkloc].write(chunk_uuids[i], chunks[i]) 	
-			#备份第二份		
-			chunkloc = chunkloc % self.namenode.num_datanodes + 1
 			self.namenode.datanodes[chunkloc].write(chunk_uuids[i], chunks[i]) 
 
 	def read(self, filename):
@@ -32,12 +29,8 @@ class Client(object):
 		for chunk_uuid in chunk_uuids:
 			chunkloc = self.namenode.chunktable[chunk_uuid] #获取uuid的DataNode的位置
 			# print chunk_uuid
-			# print chunkloc
-			data_temp = self.namenode.datanodes[chunkloc].read(chunk_uuid)	
-			if -1 == data_temp: #读取当前DataNode上的chunk不存在（即：某一个DataNode被损坏）
-				data_temp = self.namenode.datanodes[chunkloc%self.namenode.num_datanodes + 1].read(chunk_uuid)
-				print 'Current chunk is broken.'  #读取下一个DataNode的chunk
-			data = data + data_temp
+			# print chunkloc			
+			data = data + self.namenode.datanodes[chunkloc].read(chunk_uuid)
 		return data
 
 	def delete(self, filename):  #删除文件：物理删除和元数据删除
@@ -106,12 +99,9 @@ class Datanode(object):
 	
 	def read(self, chunk_uuid): #从chunk读取
 		data = None
-		try :
-			with open(self.local_fs_root + "/" + str(chunk_uuid), "r") as fr:
-				data = fr.read()
-			return data
-		except IOError :
-			return -1
+		with open(self.local_fs_root + "/" + str(chunk_uuid), "r") as fr:
+			data = fr.read()
+		return data
 
 	def delete(self, chunk_uuid):
 		try:
@@ -141,10 +131,8 @@ def main():
 	nd = Namenode()
 	c = Client(nd)
 	c.write("jyc1", "Hello jyc1.Hello jyc1.Hello jyc1.Hello jyc1.")
-	time.sleep(5)
 	c.write("jyc2", "Hello jyc2.Hello jyc2.Hello jyc2.Hello jyc2.")
 	c.write("jyc3", "Hello jyc3.Hello jyc3.Hello jyc3.Hello jyc3.")
-	time.sleep(5)
 	print c.read("jyc1")
 	print c.read("jyc2")
 	print c.read("jyc3")
