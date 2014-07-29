@@ -3,7 +3,6 @@ import os
 import uuid
 import math
 import time
-import socket
 
 class Client(object):
 	"""docstring for Client"""
@@ -100,62 +99,31 @@ class Datanode(object):
 	"""docstring for Datanode"""
 	def __init__(self, chunkloc):
 		self.chunkloc = chunkloc
-		self.port = 12345 + chunkloc #ToDo：通过chunk_loc 添加不同的端口
-		self.address = ('127.0.0.1', self.port)
-
-		# self.local_fs_root = "D:/HDFSTemp/Datanode" + str(chunkloc) #用不同的目录来模仿不同的Datanode
-		# if not os.path.isdir(self.local_fs_root):
-		# 	os.makedirs(self.local_fs_root)
-		
+		self.local_fs_root = "D:/HDFSTemp/Datanode" + str(chunkloc) #用不同的目录来模仿不同的Datanode
+		if not os.path.isdir(self.local_fs_root):
+			os.makedirs(self.local_fs_root)
+		#ToDo：通过chunk_loc 添加不同的端口
 
 	def write(self, chunk_uuid, chunk):#写入到chunk
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect(self.address)
-		s.send('write') #发送写命令
-		if 'conn' == s.recv(1024): #判断是否连接上
-			s.send(str(chunk_uuid))  #连接上后，发送文件名
-			if 'done' == s.recv(1024):
-				s.send(chunk)
-		s.close()
-		# try:
-		# 	with open(self.local_fs_root + "/" + str(chunk_uuid), "w") as fw:
-		# 		fw.write(chunk)
-		# except IOError :
-		# 	print "The HDFS is broken."
+		try:
+			with open(self.local_fs_root + "/" + str(chunk_uuid), "w") as fw:
+				fw.write(chunk)
+		except IOError :
+			print "The HDFS is broken."
 	def read(self, chunk_uuid): #从chunk读取
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect(self.address)
-		s.send('read') #发送读取命令
-		if 'done' == s.recv(1024):
-			s.send(str(chunk_uuid))  #发送文件名
-			return s.recv(1024) #接收打印数据
-		s.close()	
-		# data = None
-		# try :
-		# 	with open(self.local_fs_root + "/" + str(chunk_uuid), "r") as fr:
-		# 		data = fr.read()
-		# 	return data
-		# except IOError :
-		# 	return -1
+		data = None
+		try :
+			with open(self.local_fs_root + "/" + str(chunk_uuid), "r") as fr:
+				data = fr.read()
+			return data
+		except IOError :
+			return -1
 
 	def delete(self, chunk_uuid):
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect(self.address)
-		s.send('delete') #发送读取命令
-		if 'done' == s.recv(1024):
-			s.send(str(chunk_uuid))  #发送文件名
-			print s.recv(1024) #确认删除--后面要去掉这条语句
-		s.close()		
-		# try:
-		# 	os.remove(self.local_fs_root + "/" + str(chunk_uuid))
-		# except WindowsError:
-		# 	print "Filename:" + self.local_fs_root + "/" + str(chunk_uuid) + 'dose not exits.'
-	def kill(self):
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect(self.address)
-		s.send('exit') #发送读取命令
-		print s.recv(1024)
-		s.close()
+		try:
+			os.remove(self.local_fs_root + "/" + str(chunk_uuid))
+		except WindowsError:
+			print "Filename:" + self.local_fs_root + "/" + str(chunk_uuid) + 'dose not exits.'
 
 class Command(object):
 	"""docstring for Command"""
@@ -203,11 +171,3 @@ def main():
 
 if __name__ == '__main__':
 	main()
-	#test net-DataNode
-	# dn = Datanode(3)
-	# dn.write('jyc1', 'hello jyc1. hello jyc1. hello jyc1.')
-	# print dn.read('jyc1')
-	# time.sleep(3)
-	# dn.delete('jyc1')
-	# dn.kill()
-	
