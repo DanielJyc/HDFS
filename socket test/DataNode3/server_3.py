@@ -24,7 +24,7 @@ def hdfs_server():
 			ss.send('done') #确认收到读命令
 			chunk_uuid = ss.recv(1024) #接收文件名
 			data = read(chunk_uuid) #从文件 filename读取内容放入data
-			ss.send(data)
+			ss.send(str(data))
 		elif 'delete' == recv_data: #删除指定的文件
 			print 'delete command'
 			ss.send('done')
@@ -52,7 +52,7 @@ def read(chunk_uuid): #从chunk读取
 			data = fr.read()
 		return data
 	except IOError :
-		return 'Chunk_uuid dose not exits.'
+		return -1
 
 def delete( chunk_uuid):
 	try:

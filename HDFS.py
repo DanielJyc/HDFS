@@ -4,6 +4,7 @@ import uuid
 import math
 import time
 import socket
+import logging
 
 class Client(object):
 	"""docstring for Client"""
@@ -31,8 +32,8 @@ class Client(object):
 			for chunk_uuid in chunk_uuids:
 				chunkloc = self.namenode.chunktable[chunk_uuid] #获取uuid的DataNode的位置
 				data_temp = self.namenode.datanodes[chunkloc].read(chunk_uuid)	
-				if -1 == data_temp: #读取当前DataNode上的chunk不存在（即：某一个DataNode被损坏）
-					data_temp = self.namenode.datanodes[chunkloc%self.namenode.num_datanodes + 1].read(chunk_uuid)
+				if str(-1) == data_temp: #读取当前DataNode上的chunk不存在（即：某一个DataNode被损坏）
+					data_temp = self.namenode.datanodes[chunkloc%self.namenode.num_datanodes + 1].read(chunk_uuid)  #从下一个读取
 					print 'Current chunk is broken.'  #读取下一个DataNode的chunk
 				data = data + data_temp
 			return data
@@ -109,8 +110,11 @@ class Datanode(object):
 		
 
 	def write(self, chunk_uuid, chunk):#写入到chunk
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect(self.address)
+		try :
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			s.connect(self.address)
+		except socket.error as msg:
+			logging.error(msg)	
 		s.send('write') #发送写命令
 		if 'conn' == s.recv(1024): #判断是否连接上
 			s.send(str(chunk_uuid))  #连接上后，发送文件名
@@ -185,8 +189,8 @@ class Command(object):
 			with open(filename, "r") as fr: #读取本地文件
 				data = fr.read()
 				self.client.write(filename, data)	  #写入HDFS
-		except IOError :
-			print "No such file in local."
+		except IOError, e :
+			print logging.error(e)
 
 	def download_cmd(self):
 		filename = raw_input('Input the filename which you want to download in HDFS:\n')
@@ -203,11 +207,17 @@ def main():
 
 if __name__ == '__main__':
 	main()
-	#test net-DataNode
-	# dn = Datanode(3)
+	# test net-DataNode
+	# dn = Datanode(1)
 	# dn.write('jyc1', 'hello jyc1. hello jyc1. hello jyc1.')
 	# print dn.read('jyc1')
-	# time.sleep(3)
+	# time.sleep(2)
 	# dn.delete('jyc1')
+
+	# kill all
+	# dn = Datanode(1)
 	# dn.kill()
-	
+	# dn = Datanode(2)
+	# dn.kill()
+	# dn = Datanode(3)
+	# dn.kill()

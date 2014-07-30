@@ -8,10 +8,8 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
         self.data = self.request.recv(1024)
         print "%s wrote:" % self.client_address[0]
         res= struct.unpack('2B6H',self.data)
-        print res[2]
+        print res
 if __name__ == "__main__":
-    HOST, PORT = '127.0.0.1', 9997
+    HOST, PORT = '127.0.0.1', 9999
     server = SocketServer.TCPServer((HOST, PORT), MyTCPHandler)
     server.serve_forever()
-    # server.shutdown()
-    
