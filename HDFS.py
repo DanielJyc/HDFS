@@ -5,6 +5,7 @@ import math
 import time
 import socket
 import logging
+import pickle
 
 class Client(object):
 	"""docstring for Client"""
@@ -104,62 +105,44 @@ class Datanode(object):
 		self.port = 12345 + chunkloc #ToDo：通过chunk_loc 添加不同的端口
 		self.address = ('127.0.0.1', self.port)
 
-		# self.local_fs_root = "D:/HDFSTemp/Datanode" + str(chunkloc) #用不同的目录来模仿不同的Datanode
-		# if not os.path.isdir(self.local_fs_root):
-		# 	os.makedirs(self.local_fs_root)
-		
-
 	def write(self, chunk_uuid, chunk):#写入到chunk
 		try :
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			s.connect(self.address)
 		except socket.error as msg:
 			logging.error(msg)	
-		s.send('write') #发送写命令
-		if 'conn' == s.recv(1024): #判断是否连接上
-			s.send(str(chunk_uuid))  #连接上后，发送文件名
-			if 'done' == s.recv(1024):
-				s.send(chunk)
+		data = ['write', str(chunk_uuid), chunk] #写命令/文件名/文件内容
+		pickle_data = pickle.dumps(data)
+		s.send(pickle_data) #发送写命令
 		s.close()
-		# try:
-		# 	with open(self.local_fs_root + "/" + str(chunk_uuid), "w") as fw:
-		# 		fw.write(chunk)
-		# except IOError :
-		# 	print "The HDFS is broken."
+
 	def read(self, chunk_uuid): #从chunk读取
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.connect(self.address)
-		s.send('read') #发送读取命令
-		if 'done' == s.recv(1024):
-			s.send(str(chunk_uuid))  #发送文件名
-			return s.recv(1024) #接收打印数据
+		data = ['read', str(chunk_uuid)] #读取命令/文件名
+		pickle_data = pickle.dumps(data)
+		s.send(pickle_data) #发送写命令
+		chunk = s.recv(1024) #接收数据
 		s.close()	
-		# data = None
-		# try :
-		# 	with open(self.local_fs_root + "/" + str(chunk_uuid), "r") as fr:
-		# 		data = fr.read()
-		# 	return data
-		# except IOError :
-		# 	return -1
+		return chunk
 
 	def delete(self, chunk_uuid):
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.connect(self.address)
-		s.send('delete') #发送读取命令
-		if 'done' == s.recv(1024):
-			s.send(str(chunk_uuid))  #发送文件名
-			print s.recv(1024) #确认删除--后面要去掉这条语句
-		s.close()		
-		# try:
-		# 	os.remove(self.local_fs_root + "/" + str(chunk_uuid))
-		# except WindowsError:
-		# 	print "Filename:" + self.local_fs_root + "/" + str(chunk_uuid) + 'dose not exits.'
+		data = ['delete', str(chunk_uuid)] #删除命令/文件名
+		pickle_data = pickle.dumps(data)
+		s.send(pickle_data) #发送写命令
+		print s.recv(1024) #确认删除--后面要去掉这条语句
+		s.close()	
+
 	def kill(self):
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.connect(self.address)
-		s.send('exit') #发送读取命令
-		print s.recv(1024)
-		s.close()
+		data = ['exit'] #退出命令
+		pickle_data = pickle.dumps(data)
+		s.send(pickle_data) 
+		print s.recv(1024) 
+		s.close()	
 
 class Command(object):
 	"""docstring for Command"""
@@ -206,13 +189,14 @@ def main():
 	command.command_line()
 
 if __name__ == '__main__':
-	main()
+	# main()
 	# test net-DataNode
-	# dn = Datanode(1)
-	# dn.write('jyc1', 'hello jyc1. hello jyc1. hello jyc1.')
-	# print dn.read('jyc1')
-	# time.sleep(2)
-	# dn.delete('jyc1')
+	dn = Datanode(3)
+	dn.write('jyc1', 'hello jyc1. hello jyc1. hello jyc1.')
+	print dn.read('jyc1')
+	time.sleep(2)
+	dn.delete('jyc1')
+	dn.kill()
 
 	# kill all
 	# dn = Datanode(1)
