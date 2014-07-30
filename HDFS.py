@@ -189,14 +189,14 @@ def main():
 	command.command_line()
 
 if __name__ == '__main__':
-	# main()
+	main()
 	# test net-DataNode
-	dn = Datanode(3)
-	dn.write('jyc1', 'hello jyc1. hello jyc1. hello jyc1.')
-	print dn.read('jyc1')
-	time.sleep(2)
-	dn.delete('jyc1')
-	dn.kill()
+	# dn = Datanode(3)
+	# dn.write('jyc1', 'hello jyc1. hello jyc1. hello jyc1.')
+	# print dn.read('jyc1')
+	# time.sleep(2)
+	# dn.delete('jyc1')
+	# dn.kill()
 
 	# kill all
 	# dn = Datanode(1)
