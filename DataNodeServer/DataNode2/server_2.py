@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-import time
 import SocketServer
 import struct
 import pickle
@@ -57,11 +56,7 @@ class DatanodeTCPHandler(SocketServer.BaseRequestHandler):
             return -1 
 
 if __name__ == "__main__":
-    HOST, PORT = '127.0.0.1', 9991
+    HOST, PORT = '127.0.0.1', 12347
     server = SocketServer.TCPServer((HOST, PORT), DatanodeTCPHandler)
     server.serve_forever()
-    while True:
-        print 'hello jyc'
-        time.sleep(2)
     # server.shutdown()
-    
